@@ -1,0 +1,26 @@
+data () {
+  return {
+    product: {
+      name: 'iPhone',
+      image: 'https://bit.ly/2LvJCYh',
+      price: 30000,
+      variants: [
+        {
+          id: 1,
+          variant: '白色',
+          image: 'https://store.storeimages.cdn-apple.com/8756/as-images.apple.com/is/image/AppleInc/aos/published/images/i/ph/iphone/xr/iphone-xr-white-select-201809?wid=940&hei=1112&fmt=png-alpha&qlt=80&.v=1551226036668'
+        },
+        {
+          id: 2,
+          variant: '黑色',
+          image: 'https://store.storeimages.cdn-apple.com/8756/as-images.apple.com/is/image/AppleInc/aos/published/images/i/ph/iphone/xr/iphone-xr-black-select-201809?wid=940&hei=1112&fmt=png-alpha&qlt=80&.v=1551226038992'
+        },
+        {
+          id: 3,
+          variant: '藍色',
+          image: 'https://store.storeimages.cdn-apple.com/8756/as-images.apple.com/is/image/AppleInc/aos/published/images/i/ph/iphone/xr/iphone-xr-blue-select-201809?wid=940&hei=1112&fmt=png-alpha&qlt=80&.v=1551226036356'
+        }
+      ]
+    }
+  };
+}
