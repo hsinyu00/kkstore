@@ -3,7 +3,7 @@
 # WorkShop 注意事項
 
 1. CSS 不在這次的學習範圍，所以我會先提供寫好的。同學只要使用指定的 class name 即可。
-2. 寫久了，很多東西會視為理所當然。對於我的作法不理解時，請同學多問「為什麼？」
+2. 寫久了，很多東西會視為理所當然。對於我的作法不理解時，請同學多問「為什麼？」（雖然我不一定能夠回答就是了)
 
 # 下載空專案
 
@@ -389,4 +389,34 @@ computed: {
 24. 這時候，你應該可以看到你的產品列表跑回來了
 25. 你可能會認為，抓個產品列表要做的事情這麼多，也太麻煩了吧。沒錯，但是大型專案，長期下來你省下的是抓 bug 的時間。但是小專案建議可以不用他。
 
+26. 我們點進產品介紹頁後，我們也希望能夠馬上從伺服器取得完整的產品資訊。
+27. 新增 `stores/product.js`
 
+```js
+export default {
+  namespaced: true,
+  state: {
+    product: null
+  },
+  mutations: {
+    set (state, product) {
+      state.product = product
+    }
+  },
+  actions: {
+    async fetch (context, modelId) {
+      let response = await fetch(`http://api-eshop.jaceju.macross7.kk-box.com/products/${modelId}`);
+      let data = await response.json();
+
+      context.commit('set', data.data);
+    }
+  },
+  getters: {
+    product: (state) => state.product
+  }
+}
+```
+
+28. 比較特別的地方是，我們這邊的 action 接受了第二個參數。他讓我們可以攜帶額外的資訊控制 action 要做的事情。這個例子呼叫這個 action 的人要告訴我，這個 action 要下載哪個 modelId 的產品資料。
+29. 如果要帶多個資料，要自己包成物件再丟進來解開。
+30. 回到 ProductDetail.vue

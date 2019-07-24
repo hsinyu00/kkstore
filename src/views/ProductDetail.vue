@@ -1,22 +1,69 @@
 <template>
-  <div class="product-detail">
-
+  <div class="product-detail" v-if="product">
+    <div class="product-image">
+      <img :src="image" />
+    </div>
+    <div class="product-info">
+      <h1>{{ product.name }}</h1>
+      <h2>顏色</h2>
+      <ul class="variant-selector">
+        <li v-for="(variant, index) in product.variants" :key="variant.id">
+          <button
+            class="btn"
+            :class="{ active: selected === index }"
+            @click="handleClick(index)">{{ variant.variant }}</button>
+        </li>
+      </ul>
+      <h2>售價</h2>
+      <p class="product-price">$ {{ product.price }}</p>
+    </div>
   </div>
 </template>
 
 <script>
-export default {
+import { mapGetters } from 'vuex';
 
+export default {
+  props: {
+    id: {
+      type: String,
+      required: true
+    }
+  },
+  data () {
+    return {
+      selected: 0
+    };
+  },
+  mounted () {
+    this.$store.dispatch('Product/fetch', this.id);
+  },
+  methods: {
+    handleClick (index) {
+      this.selected = index;
+    }
+  },
+  computed: {
+    image () {
+      return this.product.variants[this.selected].image;
+    },
+    ...mapGetters({
+      product: 'Product/product'
+    })
+  }
 };
 </script>
 
 <style lang='scss' scoped>
 .product-detail {
   display: flex;
+  margin-top: 40px;
   .product-image {
     flex: 0 1 40%;
+    text-align: center;
     img {
-      width: 100%;
+      display: inline-block;
+      width: 80%;
     }
   }
   .product-info {

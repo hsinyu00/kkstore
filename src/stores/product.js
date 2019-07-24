@@ -1,22 +1,22 @@
 export default {
   namespaced: true,
   state: {
-    products: []
+    product: null
   },
   mutations: {
-    set (state, products) {
-      state.products = products;
+    set (state, product) {
+      state.product = product;
     }
   },
   actions: {
-    async fetch (context) {
-      let response = await fetch('http://api-eshop.jaceju.macross7.kk-box.com/products');
+    async fetch (context, modelId) {
+      let response = await fetch(`http://api-eshop.jaceju.macross7.kk-box.com/products/${modelId}`);
       let data = await response.json();
 
       context.commit('set', data.data);
     }
   },
   getters: {
-    all: state => state.products
+    product: (state) => state.product
   }
 };
