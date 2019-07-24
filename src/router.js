@@ -15,9 +15,10 @@ export default new Router({
       component: Home
     },
     {
-      path: '/detail/:1',
+      path: '/detail/:id',
       name: 'detail',
-      component: ProductDetail
+      component: ProductDetail,
+      props: true
     }
   ]
 });

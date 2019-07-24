@@ -48,4 +48,13 @@ button.btn {
   padding: 10px 20px;
   font-size: 14px;
 }
+
+img {
+  max-width: 100%;
+  width: auto;
+}
+
+.container {
+  min-width: 700px;
+}
 </style>

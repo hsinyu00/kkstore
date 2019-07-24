@@ -15,7 +15,9 @@
 - views/* 「頁面」元件
 - components/* 其他元件
 
-# 產品介紹頁
+- API 文件：http://api-shop-doc.jaceju.macross7.kk-box.com/api/v1/
+
+# 第一章：產品介紹頁 (Vue Template 基本語法)
 
 1. 打開 `view/ProductDetail.vue`
 2. 這是我們的產品介紹頁
@@ -167,3 +169,224 @@ computed: {
 <h2>售價</h2>
 <p class="product-price">{{ product.price }}</p>
 ```
+
+# 第二章 產品列表頁 Vue 元件
+
+1. 改網址回到首頁 `/`
+2. 撰寫基本的產品列表
+
+```html
+<ul class="product-list">
+  <li v-for="product in products" :key="product.model">
+    <div class="product">
+      <div class="product-image">
+        <img :src="product.variants[0].image">
+      </div>
+      <div class="product-info">
+        <p class="product-name">{{ product.name }}</p>
+        <p class="product-price">NT$ {{ product.price }}</p>
+      </div>
+    </div>
+  </li>
+</ul>
+```
+
+3. 我們可以把一個產品卡包成一個元件，這讓我們列表頁的變得簡單好讀。也讓產品卡的樣式與邏輯可以封裝起來，避免與外部關聯過多。
+4. 首先我們建立一個新的 Vue file，叫做 `Product.vue`，放在 `components` 目錄下。
+5. 如果我們有安裝 VS Code 擴充：Vuter 的話，可以輸入 `scaffold` (不必輸入完，候選項目出現後，按 Enter) 自動產生一個空的 Vue 元件。
+6. 我們把剛剛的 HTML 複製過來
+7. 我們不希望元件自己有呼叫 API 的機制，所以他的一切所需都要從上層傳過來。
+8. 這時候，我們要透過 props，從剛剛的 `Home.vue` 接受 product 物件。
+
+```js
+props: {
+  product: {
+    type: Object,
+    required: true
+  }
+}
+```
+
+9. 我們把 CSS 搬過來
+10. 接下來回到 Home，我們要載入剛剛寫好的元件：
+
+```js
+import Product from './../components/Product';
+
+...
+components: {
+  Product
+  // Product: Product 的縮寫
+}
+```
+
+11. 如此一來我們把元件註冊上去了，雖然我們註冊的名稱是 "Product"，但是實際上在使用時，使用的是小寫的 <product>。
+12. Vue.js 會把 CamelCase 轉成 kebab-case，以符合 HTML tag name 的習慣。
+13. 幫元件取名字時，要小心不要和 HTML 原生的元素衝突，像是 `Button.vue` 就會出問題。
+14. 一個避免衝突的好方法，就是一律使用兩或更多個單字作為元件名稱。HTML 原生元素沒有兩個單字的。
+15. 把原本 inline 寫的 HTML 替換成剛定義好的元件：
+
+```html
+<li v-for="product in products" :key="product.model">
+  <product :product="product" />
+</li>
+```
+
+16. 實作超連結：我們希望按下產品名稱後，可以進到產品資訊頁。
+17. 要做到這個，我們要對 vue-router 做一些了解。 (簡報)
+18. 在樣板裡面我們可以用 `<router-link>` 元件，並告訴他要去哪裡：
+
+```html
+<router-link :to="'/detail/' + product.model">{{ product.name }}</router-link>
+```
+
+19. 不過這樣一來，我們把網址格式寫在 code 裡面，到時候這個組網址的程式可能到處都有，這會降低我們的可維護性。(萬一改網址，你要改好多地方)
+20. 所以我們有另外一個表達方式。由於我們的每個路由都有取名字，所以我們可以用名字稱呼他。
+
+```html
+<router-link :to="{ name: 'detail' }">{{ product.name }}</router-link>
+```
+
+21. 但是我們的網址裡面還有產品型號在裡面，我們要透過 `params` 屬性來指派他：
+
+```html
+<router-link :to="{ name: 'detail', params: { id: product.model } }">{{ product.name }}</router-link>
+```
+
+# 第三章 呼叫 API
+
+1. 到現在為止，我們網頁上呈現的資訊都是寫死在 code 裡面的，在真實世界我們需要呼叫 API 跟其他服務取得資料。
+2. 我們通常會使用 Vuex 來幫我們管理取得、保存與更新資料的邏輯。(簡報)
+3. 我們創建一個目錄叫 `store`
+4. 我們要設計一個 vuex 模組，所以新增一個檔案叫做 `products.js`
+5. 寫下一個 vuex 模組的基本架構： (他也不過是一個普通的物件)
+
+```js
+export default {
+  namespaced: true,
+  state: {
+    products: []
+  },
+  mutations: {
+
+  },
+  actions: {
+
+  },
+  getters: {
+
+  }
+};
+```
+
+6. 這個模組，我們要從 API 那邊拿回我們的產品列表，然後保存起來。
+7. 我們先回去 Home.vue 那邊把我們本地的資料刪掉。讓他噴錯沒關係。
+
+```diff
+- import products from './../../snippets/products';
+  import Product from './../components/Product';
+
+  export default {
+-   data () {
+-     return {
+-       products: products
+-     };
+-   },
+```
+
+8. 打開 API 文件，我們知道如果要取得產品列表，我們要對 `http://api-eshop.jaceju.macross7.kk-box.com/products` 發送 GET 請求。
+9. 我們在 `actions` 區段新增一個方法：
+
+```js
+async fetch (context) {
+
+}
+```
+
+10. 我們會收到 vuex 給我們的一個物件 `context`，裡面有很多必須的工具，讓我們可以跟 vuex 互動。還有第二個參數叫做 `payload` 不過目前還沒有用到。
+11. 在瀏覽器裡面，想要透過程式發送一個 HTTP 請求，我們可以使用 `fetch`。因為他是非同步操作，所以要記得補上 await。
+
+```js
+let response = await fetch('http://api-eshop.jaceju.macross7.kk-box.com/products');
+let body = await response.json();
+
+console.log(body);
+```
+
+12. 接下來我們要把這個模組註冊到我們的 App 裡面。
+
+13. 打開 `store.js`
+
+```js
+import Products from './stores/products';
+
+// ... 略
+
+modules: {
+  Products
+}
+```
+
+14. 回到 `Home.vue`
+
+```js
+mounted () {
+  this.$store.dispatch('Products/fetch');
+}
+```
+
+15. 如果剛才那些動作都正確無誤的話，我們應該會在 console 看到我們 API 的回應內容。
+16. 回到 `store/products.js` 裡面，我們要把剛剛辛苦抓下來的東西存進 state 裡面。
+17. 剛剛有提到，只有 mutation 可以改 state，所以我們現在要寫這個 mutation。
+
+```js
+mutations: {
+  set (state, products) {
+    state.products = products;
+  }
+}
+```
+
+18. 會到 `fetch` action，補上：
+
+```js
+context.commit('set', data.data);
+```
+
+19. 理論上做到這邊，我們的元件就可以吃到 `state.product` 的值了。
+20. 但是為了好維護，我們想要縮限 `state` 可以被取用的管道，所以習慣上我們習慣在定義個 `getter` 來幫我們取得 `state.product` 的內容。
+
+```js
+getters: {
+  all: state => state.product
+}
+```
+
+21. 現在，一個 Vuex 模組的每個面向你都已經碰過，有所概念了。之後我們寫的另外幾個模組，都脫離不了這些。
+22. 回到 Home 元件，我們現在要從 vuex 裡面取得產品資訊。
+
+```js
+computed: {
+  products () {
+    return this.$store.getters['Products/all'];
+  }
+}
+```
+
+23. 但是一個複雜一點網站，你可能會這樣類似 computed 的定義幾百次，這時候我們會使用 vuex 提供的一個方便工具，叫做 `mapGetter`。
+
+```js
+import { mapGetter } from 'vuex';
+
+computed: {
+  ...mapGetter({
+    products: 'Product/all'
+  })
+}
+
+```
+
+24. 這時候，你應該可以看到你的產品列表跑回來了
+25. 你可能會認為，抓個產品列表要做的事情這麼多，也太麻煩了吧。沒錯，但是大型專案，長期下來你省下的是抓 bug 的時間。但是小專案建議可以不用他。
+
+
