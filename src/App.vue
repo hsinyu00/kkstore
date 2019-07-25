@@ -11,9 +11,6 @@
 import HeaderMain from './components/HeaderMain';
 
 export default {
-  async created () {
-    await this.$store.dispatch('User/restore');
-  },
   components: {
     HeaderMain
   }
