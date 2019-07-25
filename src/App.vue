@@ -11,6 +11,9 @@
 import HeaderMain from './components/HeaderMain';
 
 export default {
+  async created () {
+    await this.$store.dispatch('User/restore');
+  },
   components: {
     HeaderMain
   }
@@ -42,11 +45,17 @@ a {
   }
 }
 
-button.btn {
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  padding: 10px 20px;
-  font-size: 14px;
+button {
+  &.btn {
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+  &.btn-primary {
+    background-color: #00aed8;
+    color: #fff;
+  }
 }
 
 img {
@@ -56,5 +65,7 @@ img {
 
 .container {
   min-width: 700px;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 </style>

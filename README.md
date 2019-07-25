@@ -420,3 +420,348 @@ export default {
 28. 比較特別的地方是，我們這邊的 action 接受了第二個參數。他讓我們可以攜帶額外的資訊控制 action 要做的事情。這個例子呼叫這個 action 的人要告訴我，這個 action 要下載哪個 modelId 的產品資料。
 29. 如果要帶多個資料，要自己包成物件再丟進來解開。
 30. 回到 ProductDetail.vue
+
+```js
+import { mapGetters } from 'vuex';
+
+...
+
+{
+   mounted () {
+    this.$store.dispatch('Product/fetch', this.id);
+  },
+  computed: {
+    ...mapGetters({
+      product: 'Product/product'
+    })
+  }
+}
+```
+
+# 第 4 章 前端認證管理，進階 API 呼叫
+
+1. 有些 API 功能，會需要認證之後才可以使用。所以我們要做一個登入畫面，讓使用者輸入他的帳號密碼。如果正確，伺服器會給我一個金鑰 (一個字串)
+2. 之後我們就可以憑這個金鑰去存取個人的 API
+3. 這一次，我們從 store 這邊下手：
+4. 建立一個檔案 `stores/user.js`
+
+```js
+export default {
+  namespaced: true,
+  state: {
+    user: null
+  },
+  mutation: {
+    set (state, user) {
+      state.user = user;
+    },
+    clear (state) {
+      state.user = null;
+    }
+  },
+  actions: {
+    async login (context, payload) {
+      let email = payload.email;
+      let password = payload.password;
+
+      let response = await fetch('http://api-eshop.jaceju.macross7.kk-box.com/login', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      // 我們要檢查伺服器的狀態碼是不是 200
+      if (!response.ok) {
+        // 不是的話丟錯誤出去
+        throw new Error('fail');
+      }
+
+      let data = response.json();
+
+      context.commit('set', data.data);
+    }
+  }
+};
+```
+
+5. 建立 `Login.vue`
+
+```html
+<div class="login">
+  <form>
+    <div class="field">
+      <label>電郵：<input type="email" v-model="email" /></label>
+    </div>
+    <div class="field">
+      <label>密碼：<input type="password" v-model="password" /></label>
+    </div>
+    <button class="btn" type="submit">登出</button>
+  </form>
+</div>
+```
+
+```js
+data () {
+  return {
+    email: '',
+    password: ''
+  }
+}
+```
+
+6. v-model 讓我們可以將 <input> 的 value 跟 vue data 裡面的屬性進行雙向綁定。
+7. 這讓我們可以在程式裡面吃到，使用者輸入的東西
+8. 接下來我們要在使用者送出表單時，發一個 action 到 user store
+9. 在 <form> 綁定 `submit` 事件
+10. 加上 `.prevent`
+11. 寫 handleSubmit
+
+```js
+async handleSubmit () {
+  try {
+    await this.$store.dispatch('User/login', { email: this.email, password: this.password });
+    // 成功回首頁
+    this.$router.push({ name: 'home' });
+  } catch (error) {
+    this.error = true;
+  }
+}
+```
+
+12. 應付失敗
+13. HeaderMain 顯示登入狀態
+
+```html
+<li v-if="user">{{ user.email }}</li>
+<li v-else><router-link :to="{ name: 'login' }">登入</router-link></li>
+```
+
+14. 重新整理之後，登入就不見了
+15. 我們可以試著把登入狀態保存下來
+
+```js
+
+// @stores/user.actions.login
+localStorage.setItem('kks::login', JSON.stringify(data.data));
+
+// @stores/user.actions
+restore (context) {
+  let stored = localStorage.getItem('kks::login');
+
+  if (stored) {
+    context.commit('set', JSON.parse(stored));
+  }
+}
+
+// @App.vue.created
+this.$store.dispatch('User/restore');
+```
+
+16. 登出也很簡單
+
+```js
+logout (context) {
+  context.commit('clear');
+  localStorage.removeItem('kks::login');
+}
+```
+
+```html
+<li v-if="user">{{ user.email }} <a href="#" @click.prevent="handleLogout">登出</a></li>
+```
+
+```js
+methods: {
+  handleLogout () {
+    this.$store.dispatch('User/logout');
+  }
+}
+```
+
+# 第 5 章 購物車增刪查
+
+1. 接下來我們要能夠把商品加入購物車
+2. 我們要呼叫 API `POST http://api-eshop.jaceju.macross7.kk-box.com/cart`
+3. 但是這個 API 有點不同，他需要有會員身份才能呼叫，這會用到我們剛剛取得的 token。
+4. 建立一個檔案 `stores/cart.js`
+
+```js
+export default {
+  namespaced: true,
+  state: {
+    cart: []
+  },
+  mutations: {
+    set (state, cart) {
+      state.cart = cart;
+    }
+  },
+  actions: {
+    async addItem (context, productId) {
+      // 因為我們在模組裡面，我們所有稱呼的 action, getters, mutations 都會自動補上 namespace "cart"
+      // 所以我們要存取其他模組的資訊，我們可以使用 rootGetters
+      let user = context.rootGetters['User/user'];
+
+      // 因為 user 可能是 null (沒有登入)，要記得檢查
+      if (!user) {
+        throw new Error('沒有登入');
+      }
+
+      let response = await fetch('http://api-eshop.jaceju.macross7.kk-box.com/cart', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'authorization': 'Bearer ' + user.token
+        },
+        body: JSON.stringify({ productId })
+      });
+
+      return response.ok;
+    }
+  }
+};
+```
+
+5. 產品內頁，加上
+
+```html
+<button class="btn btn-primary" @click="addToCart">加入購物車</button>
+```
+
+```js
+addToCart () {
+  this.$store.dispatch('Cart/addItem', this.product.variants[this.selected].id);
+}
+```
+
+6. 列出購物車內容
+7. 新增 action:
+
+```js
+async fetch (context) {
+  let user = context.rootGetters['User/user'];
+
+  if (!user) {
+    throw new Error('沒有登入');
+  }
+
+  let response = await fetch('http://api-eshop.jaceju.macross7.kk-box.com/cart', {
+    method: 'GET',
+    headers: {
+      'authorization': 'Bearer ' + user.token
+    }
+  });
+
+  let data = await response.json();
+
+  context.commit('set', data.data);
+}
+```
+
+8. 新增 getter:
+
+```js
+getters: {
+  items: (state) => state.cart
+}
+```
+
+9. 基本頁面，新增 `Cart.vue`。加上 routing
+10. 為了方便進出購物車頁面，我們把連結加在主選單上：
+
+<template v-if="user">
+  <li><router-link :to="{ name: 'cart' }">購物車</router-link></li>
+  <li>{{ user.email }}</li>
+  <li><a href="#" @click.prevent="handleLogout">登出</a></li>
+</template>
+
+11. `<template>` 元素不會在 HTML 實際 render 出東西，但是它可以讓我們 group 東西。所以這三個東西都需要同一個條件 `v-if`，用 <template> 就很方便。
+
+12. 我們在這頁載入時，呼叫 `Cart/fetch` action
+13. 列出項目：
+
+```html
+<template>
+  <div class="cart">
+    <h2>購物車內容</h2>
+    <ol>
+      <li v-for="item in items" :key="item.id">
+        <div class="product-name">{{ item.product.name }}</div>
+        <div class="quantity">{{ item.quantity }} 件</div>
+        <div class="action"><a href="#" @click.prevent="remove">移除</a></div>
+      </li>
+    </ol>
+  </div>
+</template>
+```
+
+14. 實作移除項目功能
+
+```js
+async removeItem (context, itemId) {
+  let user = context.rootGetters['User/user'];
+
+  if (!user) {
+    throw new Error('沒有登入');
+  }
+
+  let response = await fetch(`http://api-eshop.jaceju.macross7.kk-box.com/cart/${itemId}`, {
+    method: 'DELETE',
+    headers: {
+      'content-type': 'application/json',
+      'authorization': 'Bearer ' + user.token
+    }
+  });
+
+  return response.ok;
+},
+```
+
+```js
+// Cart.vue
+async removeItem (itemId) {
+  await this.$store.dispatch('Cart/removeItem', itemId);
+  await this.$store.dispatch('Cart/fetch');
+}
+```
+
+15. 印出沒有商品
+
+```html
+<div v-if="items.length === 0">
+  沒有任何商品
+</div>
+```
+
+# 第 6 章 最終章
+
+1. 我們今天要做的功能都已經完成了，但是我們可以做一些東西讓我們的網站更好。
+
+## 標題列購物車數量
+1. 在 `stores/cart.js` 加上 getter:
+
+我們的購物車項目列表是個 array，每個項目都有一個 `quantity` 我們要把他 sum 起來。
+
+```js
+count: (state) => {
+  return state.cart.reduce((sum, item) => {
+    return sum += item.quantity;
+  }, 0);
+}
+```
+
+2. 在標題列加上
+
+```html
+<span class="badge">{{ cartCount }}</span>
+```
+
+3. 但是我們會發現，我們加入新項目時，他不會更新。因為我們沒有去 fetch 新的購物車下來 (現在只有在打開購物車頁的時候會做)
+4. 我們可以在更新購物車的時候，都做一次 fetch。
+5. User/login 和 User/restore 時，也跟著做一次。
+
+```js
+context.dispatch('Cart/fetch', null, { root: true });
+```

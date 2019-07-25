@@ -16,6 +16,8 @@
       </ul>
       <h2>售價</h2>
       <p class="product-price">$ {{ product.price }}</p>
+
+      <button class="btn btn-primary" @click="addToCart">加入購物車</button>
     </div>
   </div>
 </template>
@@ -41,6 +43,9 @@ export default {
   methods: {
     handleClick (index) {
       this.selected = index;
+    },
+    addToCart () {
+      this.$store.dispatch('Cart/addItem', this.product.variants[this.selected].id);
     }
   },
   computed: {
