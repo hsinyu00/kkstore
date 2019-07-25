@@ -23,27 +23,4 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.product {
-  border: 1px solid #ddd;
-  padding: 20px;
-  .product-image {
-    text-align: center;
-    img {
-      height: 150px;
-    }
-  }
-  .product-name {
-    text-align: center;
-    margin: 15px 0 0 0;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-  }
-  .product-price {
-    text-align: right;
-    font-size: 24px;
-    margin: 15px 0 0 0;
-  }
-}
-</style>
+<style lang="scss" scoped src="./../assets/product.scss"></style>

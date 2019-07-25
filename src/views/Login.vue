@@ -37,24 +37,4 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.login {
-  padding: 40px;
-  .field {
-    margin-bottom: 30px;
-  }
-}
-
-input[type="email"], input[type="password"] {
-  padding: 10px;
-  border-radius: 3px;
-  border: 1px solid #ddd;
-  margin-left: 40px;
-  width: 200px;
-}
-
-.error {
-  color: red;
-  margin: 20px 0;
-}
-</style>
+<style lang="scss" scoped src="./../assets/login.scss"></style>

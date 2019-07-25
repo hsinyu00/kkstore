@@ -59,39 +59,4 @@ export default {
 };
 </script>
 
-<style lang='scss' scoped>
-.product-detail {
-  display: flex;
-  margin-top: 40px;
-  .product-image {
-    flex: 0 1 40%;
-    text-align: center;
-    img {
-      display: inline-block;
-      width: 80%;
-    }
-  }
-  .product-info {
-    margin-left: 40px;
-  }
-  .product-price {
-    font-size: 24px;
-  }
-}
-
-.variant-selector {
-  list-style: none;
-  padding: 0;
-  li {
-    display: inline-block;
-    margin: 0 10px 0 0;
-  }
-}
-
-// 如果元素同時有 btn 和 active 兩個 class 的話，
-// 套用這個樣式：
-.btn.active {
-  background: #00aed8;
-  color: #fff;
-}
-</style>
+<style lang='scss' scoped src="./../assets/product-detail.scss"></style>

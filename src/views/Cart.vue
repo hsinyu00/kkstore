@@ -35,24 +35,4 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.cart ol {
-  padding: 0;
-  list-style-position: inside;
-  li {
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid #ddd;
-    padding: 10px 20px;
-    &:first-child {
-      border-top: 1px solid #ddd;
-    }
-    .product-name {
-      flex: 1 0 80%;
-    }
-    .quantity {
-      padding: 0 20px;
-    }
-  }
-}
-</style>
+<style lang="scss" scoped src="./../assets/cart.scss"></style>

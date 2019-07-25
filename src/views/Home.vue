@@ -27,16 +27,4 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.product-list {
-  padding: 0;
-  list-style: none;
-  li {
-    float: left;
-    padding: 0 20px;
-    margin-bottom: 20px;
-    overflow: hidden;
-    width: 25%;
-  }
-}
-</style>
+<style lang="scss" scoped src="./../assets/home.scss"></style>
